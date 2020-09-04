@@ -1,0 +1,233 @@
+#! /bin/bash
+
+#calculate-revision
+#by Julian Sangillo
+#Given the latest version, revision type and revision pattern, calculate and return the new version.
+
+showHelp() {
+	echo "Usage: calculate-revision [options...] <revision-pattern> <latest-version> <revision-type>";
+	echo "Given the latest version, revision type and revision pattern, calculate";
+	echo "and return the new version.";
+	echo "	";
+	echo "Required arguments: ";
+	echo "	revision-pattern	A string pattern that determines the location of";
+	echo "				each revision value separated by periods. Options are:";
+	echo "				M = major, m = minor, b = build, and p = patch.";
+	echo "				Example1: M.m.b.p";
+	echo "				Example2: M.m.p.b";
+	echo "				Example3: M.m";
+	echo "	latest-version		The latest version of your project that currently";
+	echo "				exists in your repository. This version must adhere";
+	echo "				to the revision pattern for this command to work as";
+	echo "				expected.";
+	echo "				Example: 6.3.12";
+	echo "	revision-type		The type of revision which determines how this";
+	echo "				command will calculate the new version from the latest";
+	echo "				version in accordance to the revision pattern.";
+	echo "				Options: major, minor, build, and patch.";
+	echo "Options: ";
+	echo "	-i	Runs calculate-revision in initialize mode. This mode is for situations";
+	echo "		where there is no latest version yet. In which case, if the pattern is";
+	echo "		M.m.b.p, then an initial version of 1.0.0.0 is returned. Of course, this";
+	echo "		varies depending on the pattern. When running in initialize mode, only";
+	echo "		the revision-pattern is required as an argument.";
+	echo "		Example: calculate-revision -i <revision-pattern>";
+	echo "	-s	Runs calculate-revision in standard mode. In this mode, the revision-pattern,";
+	echo "		latest-version, and revision-type are all required. calculate-revision will";
+	echo "		return the new version based on revision-type and revision-pattern. This is the"
+	echo "		default mode.";
+	echo "		Example1: calculate-revision <revision-pattern> <latest-version> <revision-type>";
+	echo "		Example2: calculate-revision -s <revision-pattern> <latest-version> <revision-type>";
+} >&2
+
+IS_STD=true;
+
+while getopts ":is" opt; do
+	case "${opt}" in
+		i) IS_STD=false ;;
+		s) IS_STD=true ;;
+		*)
+			log "Could not calculate revision! Unknown option '-${opt}'";
+			echo "	" >&2;
+			showHelp;
+			exit 1
+			;;
+	esac
+done
+shift $((OPTIND-1));
+
+if $IS_STD; then
+	log 'Starting in mode: standard';
+else
+	log 'Starting in mode: initialize';
+fi
+
+if { $IS_STD && [ "$#" -ne 3 ]; } || { ! $IS_STD && [ "$#" -ne 1 ]; }; then
+	log "Could not calculate revision! Illegal number of arguments.";
+	echo "	" >&2;
+	showHelp;
+	exit 1
+fi
+
+REVISION_PATTERN="$1";
+if $IS_STD; then
+	LATEST_VERSION="$2";
+	REVISION_TYPE="${3,,}";
+
+	if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[a-zA-Z]+)?$ ]]; then
+		log "Could not calculate revision! The latest version '$LATEST_VERSION' is invalid.";
+		showHelp;
+		exit 16
+	fi
+fi
+
+if ! [[ "$REVISION_PATTERN" =~ ^[Mmbp](\.[Mmbp])*$ ]]; then
+	log "Could not calculate revision! The revision pattern '$REVISION_PATTERN' is invalid.";
+	showHelp;
+	exit 32
+fi
+
+log "revision-pattern = $REVISION_PATTERN";
+if $IS_STD; then
+	log "latest-version = $LATEST_VERSION";
+	log "revision-type = $REVISION_TYPE";
+fi
+
+. split-on-delim;
+. join-on-delim;
+
+parsePattern() {
+	log 'Parsing pattern ...';
+
+	split . $LATEST_VERSION;
+	local version=(${return_arr[@]});
+	split . $REVISION_PATTERN;
+	local pattern=(${return_arr[@]});
+
+	if ! [[ "${version[${#version[@]}-1]}" =~ ^[0-9]+$ ]]; then
+		version[${#version[@]}-1]='';
+	fi
+
+	if [ ${#version[@]} -ne ${#pattern[@]} ]; then
+		log "Could not calculate revision! The latest version '$LATEST_VERSION' must be the same length as the revision pattern '$REVISION_PATTERN'.";
+		exit 48
+	fi
+
+	local max=$((${#version[@]}-1));
+	local completed=();
+	for ((i=0 ; i<=$max ; i++));
+	do
+		local revision=${version[i]};
+		local type=${pattern[i]};
+
+		if ! [[ "${completed[@]}" =~ "$type" ]]; then
+			case $type in
+				M) MAJOR=$revision ;;
+				m) MINOR=$revision ;;
+				b) BUILD=$revision ;;
+				p) PATCH=$revision ;;
+			esac
+			local completed+=($type);
+		else
+			log "Could not calculate revision! Pattern has duplicate character '$type'.";
+			exit 64;
+		fi
+	done
+	
+	log 'Parse completed successfully';
+	log 'Results: ';
+	log "	major = $MAJOR";
+	log "	minor = $MINOR";
+	log "	build = $BUILD";
+	log "	patch = $PATCH";
+}
+
+numberOfNewCommits() {
+	echo "$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION | wc -w)";
+}
+
+increment() {
+	log 'Incrementing revision ...';
+
+	case $REVISION_TYPE in
+		major)
+			[ ! -z "$MAJOR" ] && ((MAJOR++));
+			[ ! -z "$MINOR" ] && MINOR=0;
+			[ ! -z "$BUILD" ] && BUILD=0;
+			[ ! -z "$PATCH" ] && PATCH=0
+			;;
+		minor)
+			[ ! -z "$MINOR" ] && ((MINOR++));
+			[ ! -z "$BUILD" ] && BUILD=0;
+			[ ! -z "$PATCH" ] && PATCH=0
+			;;
+		build)
+			[ ! -z "$BUILD" ] && ((BUILD++));
+			[ ! -z "$PATCH" ] && PATCH=0
+			;;
+		patch) [ ! -z "$PATCH" ] && ((PATCH+=$(numberOfNewCommits))) ;;
+		*)
+			log "Could not calculate revision! Unknown revision type '$REVISION_TYPE'.";
+			exit  80
+			;;
+	esac
+	
+	log 'Results: ';
+	log "	major = $MAJOR";
+	log "	minor = $MINOR";
+	log "	build = $BUILD";
+	log "	patch = $PATCH";
+	
+	return 0
+}
+
+joinOutput() {
+	log 'Joining output ...'
+
+	local new_version=();
+
+	split . $REVISION_PATTERN;
+	local pattern=(${return_arr[@]});
+	
+	local max=$((${#pattern[@]}-1));
+	for ((i=0 ; i<=$max ; i++));
+	do
+		local type=${pattern[i]};
+		
+		case $type in
+			M) local new_version+=("$MAJOR") ;;
+			m) local new_version+=("$MINOR") ;;
+			b) local new_version+=("$BUILD") ;;
+			p) local new_version+=("$PATCH") ;;
+		esac
+	done
+	
+	echo $(join . ${new_version[@]})
+}
+
+initializeRevision() {
+	MAJOR=1;
+	MINOR=0;
+	BUILD=0;
+	PATCH=0:
+	
+	echo $(joinOutput)
+}
+
+calculateRevision() {
+	parsePattern;
+	increment;
+
+	echo $(joinOutput)
+}
+
+if $IS_STD; then
+	NEW_VERSION="$(calculateRevision)" || exit $?;
+else
+	NEW_VERSION="$(initializeRevision)";
+fi
+
+log "new-version = $NEW_VERSION";
+
+echo $NEW_VERSION;
+exit 0

@@ -1,0 +1,23 @@
+#! /bin/bash
+
+#initialize-git
+#by Julian Sangillo <juliansangillo@gmail.com>
+#Installs git using apt if it isn't already installed.
+
+initializeGit() {
+	log "Initializing git ...";
+	
+	local version="$(git --version)";
+	if [  "$?" -ne "0" ]; then
+		log "Git not installed. Installing ...";
+		apt install git;
+		local version="$(git --version)";
+	else
+		log "Git already installed.";
+	fi
+	
+	log "$version"
+}
+
+initializeGit;
+exit 0

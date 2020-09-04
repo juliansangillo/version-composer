@@ -1,0 +1,10 @@
+#! /bin/bash
+
+#split-on-period
+#by Julian Sangillo
+#Loads function to split a string into an array using provided delimeter. The output is a global array called 'return_arr'. Usage: split <delim> <string>
+
+split() {
+	local IFS="$1";
+	read -r -a return_arr <<< "$2"
+}

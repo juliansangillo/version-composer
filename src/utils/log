@@ -1,0 +1,15 @@
+#! /bin/bash
+
+#log
+#by Julian Sangillo
+#Given a string of analytic or debugging information, log it to stderr.
+
+if [ "$#" -ne 1 ]; then
+	echo "Could not log message! Illegal number of arguments." >&2;
+	exit 1;
+fi
+
+MESSAGE="$1";
+
+echo $MESSAGE >&2;
+exit 0

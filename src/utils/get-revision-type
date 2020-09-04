@@ -1,0 +1,56 @@
+#! /bin/bash
+
+#get-revision-type
+#by Julian Sangillo <juliansangillo@gmail.com>
+#Determine the revision type from the commit message. To specify a type, put [type] anywhere in the latest commit message, replacing 'type' with one of the valid options. If there is no revision type specified, then 'build' is the default.
+#Revision Types:
+#		major
+#		minor
+#		build
+#		patch
+
+getCommitMessage() {
+	log "Getting commit message ...";
+
+	local max="$(($(git rev-list --full-history HEAD | wc -l)-1))";
+	for ((i=0 ; i<=$max ; i++));
+	do
+		local message="$(git show -s --format=%s HEAD~$i)";
+		
+		if [[ "$message" != "Merge"* ]]; then
+			log "Found commit message.";
+			break;
+		fi
+	done
+	
+	log "Message = $message";
+	echo $message
+}
+
+getRevisionTypeFromMessage() {
+	local message="$1";
+	
+	log "Getting revision type from commit message ...";
+	log "(major, minor, build, patch)";
+
+	if [[ "${message,,}" == *"[major]"* ]]; then
+		echo "major"
+	elif [[ "${message,,}" == *"[minor]"* ]]; then
+		echo "minor"
+	elif [[ "${message,,}" == *"[patch]"* ]]; then
+		echo "patch"
+	else
+		echo "build"
+	fi
+}
+
+getRevisionType() {
+	local message="$(getCommitMessage)";
+	local type="$(getRevisionTypeFromMessage)";
+
+	log "Type: $type";
+	echo $type
+}
+
+echo "$(getRevisionType)";
+exit 0

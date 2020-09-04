@@ -1,0 +1,41 @@
+#! /bin/bash
+
+#version-composer
+#by Julian Sangillo
+#Creates a new version identifier based on the latest existing tag in your current branch.
+
+REVISION_PATTERN="$1";
+STABLE_BRANCH="$2";
+TEST_BRANCH="$3";
+DEV_BRANCH="$4";
+STABLE_TAG="$5";
+TEST_TAG="$6";
+DEV_TAG="$7";
+
+if [ "$#" -ne 7 ]; then
+	log "Illegal number of arguments.";
+	exit 1
+fi
+
+cat resources/ascii-title.txt >&2;
+
+log "Starting ...";
+
+initialize-git;
+
+LATEST_VERSION=$(get-latest-version);
+if ! [ -z "$LATEST_VERSION" ]; then
+	REVISION_TYPE=$(get-revision-type);
+	RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION $REVISION_TYPE) || exit $?;
+else
+	RAW_VERSION=$(calculate-revision -i $REVISION_PATTERN);
+fi
+
+VERSION=$(add-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANCH -T $TEST_TAG -d $DEV_BRANCH -D $DEV_TAG $RAW_VERSION) || exit $?;
+
+echo "::set-output name=raw_version::$RAW_VERSION";
+echo "::set-output name=version::$VERSION";
+
+log "Success";
+
+exit 0
