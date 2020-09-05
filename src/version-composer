@@ -24,14 +24,20 @@ log "Starting ...";
 initialize-git;
 
 LATEST_VERSION=$(get-latest-version);
-if ! [ -z "$LATEST_VERSION" ]; then
-	REVISION_TYPE=$(get-revision-type);
-	RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION $REVISION_TYPE) || exit $?;
+RELEASE_TAG=$(choose-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANCH -T $TEST_TAG -d $DEV_BRANCH -D $DEV_TAG) || exit $?;
+
+if [ "$RELEASE_TAG" = "$DEV_TAG" ]; then
+	if ! [ -z "$LATEST_VERSION" ]; then
+		REVISION_TYPE=$(get-revision-type);
+		RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION $REVISION_TYPE) || exit $?;
+	else
+		RAW_VERSION=$(calculate-revision -i $REVISION_PATTERN);
+	fi
 else
-	RAW_VERSION=$(calculate-revision -i $REVISION_PATTERN);
+	RAW_VERSION=$LATEST_VERSION;
 fi
 
-VERSION=$(add-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANCH -T $TEST_TAG -d $DEV_BRANCH -D $DEV_TAG $RAW_VERSION) || exit $?;
+VERSION=$(join . $RAW_VERSION $RELEASE_TAG);
 
 echo "::set-output name=raw_version::$RAW_VERSION";
 echo "::set-output name=version::$VERSION";

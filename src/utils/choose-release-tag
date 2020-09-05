@@ -1,19 +1,12 @@
 #! /bin/bash
 
-#add-release-tag
+#choose-release-tag
 #by Julian Sangillo
-#Append a release tag to the end of the version and return it based on the current branch.
+#Return the dev, test, or stable release tag if the checked out branch is the dev, test, or stable branch respectively.
 
 showHelp() {
-	echo "Usage: add-release-tag [options...] <raw-version>";
-	echo "Append a release tag to the end of the version and return it based on the current branch.";
-	echo "	";
-	echo "Required arguments: ";
-	echo "	raw-version	The project's version without any release tag";
-	echo "			appended to the end. The format should be a";
-	echo "			set of numbers only separated by periods.";
-	echo "			Example1: 3.1.5";
-	echo "			Example2: 6.0.3.20";
+	echo "Usage: choose-release-tag [options...]";
+	echo "Return the dev, test, or stable release tag if the checked out branch is the dev, test, or stable branch respectively.";
 	echo "	";
 	echo "Options: ";
 	echo "	-s	Sets the reference to your stable branch to the string";
@@ -53,40 +46,21 @@ while getopts ":s:t:d:S:T:D:" opt; do
 done
 shift $((OPTIND-1));
 
-if [ "$#" -ne 1 ]; then
-	log "Could not add release tag! Illegal number of arguments.";
-	echo "	" >&2;
-	showHelp;
-	exit 1
-fi
-
-RAW_VERSION="$1";
-
-if ! [[ "$RAW_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
-	log "Could not add release tag! The raw version '$RAW_VERSION' is invalid.";
-	echo "	" >&2;
-	showHelp;
-	exit 16
-fi
-
 log "stable-branch = $STABLE_BRANCH";
 log "test-branch = $TEST_BRANCH";
 log "dev-branch = $DEV_BRANCH";
 log "stable-tag = $STABLE_TAG";
 log "test-tag = $TEST_TAG";
 log "dev-tag = $DEV_TAG";
-log "raw-version = $RAW_VERSION";
-
-. join-on-delim;
 
 fetchCurrentBranch() {
 	echo "$(git branch --show-current)"
 }
 
-chooseCurrentTag() {
-	log 'Choosing current tag ...';
+chooseReleaseTag() {
+	log 'Choosing release tag ...';
 
-	local branch="$1";
+	local branch="$(fetchCurrentBranch)" || exit $?;
 	
 	if [ "$branch" = "$DEV_BRANCH" ]; then
 		local tag="$DEV_TAG";
@@ -95,30 +69,17 @@ chooseCurrentTag() {
 	elif [ "$branch" = "$STABLE_BRANCH" ]; then
 		local tag="$STABLE_TAG";
 	else
-		log "Could not add release tag! Unknown branch '$branch'";
+		log "Could not choose release tag! Unknown branch '$branch'";
 		exit 32
 	fi
-	
-	log "tag = $tag";
 	
 	echo $tag
 }
 
-addReleaseTag() {
-	log 'Adding release tag ...';
+RELEASE_TAG="$(chooseReleaseTag)" || exit $?;
 
-	BRANCH="$(fetchCurrentBranch)" || exit $?;
-	log "Current branch = $BRANCH";
-	
-	TAG="$(chooseCurrentTag $BRANCH)" || exit $?;
-	
-	echo $(join . $RAW_VERSION $TAG)
-}
+log 'Release tag chosen successfully';
+log "Release tag = $RELEASE_TAG";
 
-VERSION="$(addReleaseTag)" || exit $?;
-
-log 'Release tag added successfully';
-log "Version = $VERSION";
-
-echo $VERSION;
+echo $RELEASE_TAG;
 exit 0

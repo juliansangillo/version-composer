@@ -1,0 +1,9 @@
+#! /bin/bash
+
+#join
+#by Julian Sangillo
+#Join multiple arguments into a string on a delimeter and return that string. Usage: join <delim> [args...]
+
+IFS="$1";
+shift;
+echo "$*"

@@ -74,7 +74,7 @@ if $IS_STD; then
 	LATEST_VERSION="$2";
 	REVISION_TYPE="${3,,}";
 
-	if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[a-zA-Z]+)?$ ]]; then
+	if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
 		log "Could not calculate revision! The latest version '$LATEST_VERSION' is invalid.";
 		showHelp;
 		exit 16
@@ -93,20 +93,11 @@ if $IS_STD; then
 	log "revision-type = $REVISION_TYPE";
 fi
 
-. split-on-delim;
-. join-on-delim;
-
 parsePattern() {
 	log 'Parsing pattern ...';
 
-	split . $LATEST_VERSION;
-	local version=(${return_arr[@]});
-	split . $REVISION_PATTERN;
-	local pattern=(${return_arr[@]});
-
-	if ! [[ "${version[${#version[@]}-1]}" =~ ^[0-9]+$ ]]; then
-		version[${#version[@]}-1]='';
-	fi
+	local version=($(split . $LATEST_VERSION));
+	local pattern=($(split . $REVISION_PATTERN));
 
 	if [ ${#version[@]} -ne ${#pattern[@]} ]; then
 		log "Could not calculate revision! The latest version '$LATEST_VERSION' must be the same length as the revision pattern '$REVISION_PATTERN'.";
@@ -185,9 +176,7 @@ joinOutput() {
 	log 'Joining output ...'
 
 	local new_version=();
-
-	split . $REVISION_PATTERN;
-	local pattern=(${return_arr[@]});
+	local pattern=($(split . $REVISION_PATTERN));
 	
 	local max=$((${#pattern[@]}-1));
 	for ((i=0 ; i<=$max ; i++));

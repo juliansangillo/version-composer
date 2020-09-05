@@ -1,0 +1,9 @@
+#! /bin/bash
+
+#split
+#by Julian Sangillo
+#Split a string on the provided delimeter into a list separated by spaces. Usage: split <delim> <string>
+
+IFS="$1";
+read -r -a arr <<< "$2";
+echo "${arr[@]}"
