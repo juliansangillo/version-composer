@@ -1,0 +1,50 @@
+name: Version Composer
+author: Julian Sangillo
+description: Returns a new version identifier based on the latest existing tag in your current branch.
+inputs:
+  revision-pattern:
+    description: Custom pattern showing version structure.
+    required: false
+    default: M.m.b
+  stable-branch:
+    description: Name of branch in your repo that will be used for stable releases.
+    required: false
+    default: master
+  test-branch:
+    description: Name of branch in your repo that will be used for test releases.
+    required: false
+    default: test
+  dev-branch:
+    description: Name of branch in your repo that will be used for development releases.
+    required: false
+    default: develop
+  stable-tag:
+    description: Custom release tag name for stable releases. By default, stable releases have no stable tag.
+    required: false
+  test-tag:
+    description: Custom release tag name for test releases.
+    required: false
+    default: TEST
+  dev-tag:
+    description: Custom release tag name for development releases.
+    required: false
+    default: UNSTABLE
+outputs:
+  version:
+    description: The new version with the release tag appended at the end.
+  raw-version:
+    description: Version without the release tag at the end.
+runs:
+  using: composite
+  steps:
+    - run: |
+        echo "::add-path::$GITHUB_ACTION_PATH/${{ env.SRC }}";
+        echo "::add-path::$GITHUB_ACTION_PATH/${{ env.SRC_UTILS }}"
+      env:
+        SRC: src
+        SRC_UTILS: src/utils
+      shell: bash
+
+    - id: versioning
+      run: version-composer ${{ inputs.revision-pattern }} ${{ inputs.stable-branch }} ${{ inputs.test-branch }} ${{ inputs.dev-branch }} ${{ inputs.stable-tag }} ${{ inputs.test-tag }} ${{ inputs.dev-tag }}
+      shell: bash

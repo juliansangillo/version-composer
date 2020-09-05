@@ -2,7 +2,7 @@
 
 #version-composer
 #by Julian Sangillo
-#Creates a new version identifier based on the latest existing tag in your current branch.
+#Returns a new version identifier based on the latest existing tag in your current branch.
 
 REVISION_PATTERN="$1";
 STABLE_BRANCH="$2";
@@ -39,8 +39,8 @@ fi
 
 VERSION=$(join . $RAW_VERSION $RELEASE_TAG);
 
-echo "::set-output name=raw_version::$RAW_VERSION";
 echo "::set-output name=version::$VERSION";
+echo "::set-output name=raw_version::$RAW_VERSION";
 
 log "Success";
 
