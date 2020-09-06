@@ -86,17 +86,95 @@ When you merge a pull request (or push into test or production branches), the ve
 * **raw-version**: The new version that was created without the release tag appended
 * **is-prerelease**: Is true if this is a release into a non-production environment (dev or test) and indicates the build may be unstable. Returns false otherwise.
 ## Setup
+Below are example workflows using either the defaults or entering custom values. It is also worth noting that this action simple calculates and returns the version id among other values. It doesn't push to your repository in any way. This allows you to use the output in multiple places throughout your workflow, including in actions that will change your repo.
+### Workflow 1
 ```yml
-- name: Checkout  
-  uses: actions/checkout@v2  
-  with:  
-      fetch-depth: 0  
-      
-- name: Version  
-  id: version  
-  uses: juliansangillo/tag-version@v1  
-  with:  
-      production-branch: master  
-      test-branch: test  
-      dev-branch: develop  
+name: Workflow1
+on: push
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Version Composition
+        id: composer
+        uses: juliansangillo/version-composer@v1
+
+      - name: Create Release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.composer.outputs.version }}
+          release_name: Release ${{ steps.composer.outputs.raw-version }}
+          draft: false
+          prerelease: ${{ steps.composer.outputs.is-prerelease == 'true' }}
+```
+### Workflow 2
+```yml
+name: Workflow2
+on: push
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Version Composition
+        id: composer
+        uses: juliansangillo/version-composer@v1
+        with:
+          revision-pattern: M.m.b.p
+
+      - name: Create Release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.composer.outputs.version }}
+          release_name: Release ${{ steps.composer.outputs.raw-version }}
+          draft: false
+          prerelease: ${{ steps.composer.outputs.is-prerelease == 'true' }}
+```
+### Workflow 3
+```yml
+name: Workflow3
+on: push
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Version Composition
+        id: composer
+        uses: juliansangillo/version-composer@v1
+        with:
+          revision-pattern: M.m.b.p
+          stable-branch: release
+          test-branch: uat
+          dev-branch: dev
+          stable-tag: STABLE
+          test-tag: TEST
+          dev-tag: null
+
+      - name: Create Release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.composer.outputs.version }}
+          release_name: Release ${{ steps.composer.outputs.raw-version }}
+          draft: false
+          prerelease: ${{ steps.composer.outputs.is-prerelease == 'true' }}
 ```
