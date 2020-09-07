@@ -98,7 +98,7 @@ getRevisionType() {
 	while read -r commit; do
 		local change="$(getChangeType $commit)";
 		
-		if [ ! -z "$change" ] && [ "${TYPES[@]}" =~ *"$change"* ]; then
+		if [ ! -z "$change" ] && [[ " ${TYPES[@]} " =~ " $change " ]]; then
 			if [ "$change" = "${TYPES[major]}" ]; then
 				type='major';
 				break;
