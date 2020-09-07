@@ -1,6 +1,6 @@
 name: Version Composer
 author: Julian Sangillo
-description: Returns a new version identifier based on the latest existing tag in your current branch.
+description: Returns a new version identifier
 inputs:
   revision-pattern:
     description: Custom pattern showing version structure.
