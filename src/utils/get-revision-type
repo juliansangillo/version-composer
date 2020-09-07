@@ -118,6 +118,7 @@ getRevisionType() {
 			fi
 		fi
 		log "${TYPES[major]} ${TYPES[minor]} ${TYPES[build]} ${TYPES[patch]}";
+		log "$type";
 	done <<< "$history"
 	
 	log "Type: $type";
