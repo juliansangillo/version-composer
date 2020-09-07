@@ -5,12 +5,13 @@
 #Returns a new version identifier based on the latest existing tag in your current branch.
 
 REVISION_PATTERN="$1";
-STABLE_BRANCH="$2";
-TEST_BRANCH="$3";
-DEV_BRANCH="$4";
-STABLE_TAG="$5";
-TEST_TAG="$6";
-DEV_TAG="$7";
+DEFAULT_TYPE="$2";
+STABLE_BRANCH="$3";
+TEST_BRANCH="$4";
+DEV_BRANCH="$5";
+STABLE_TAG="$6";
+TEST_TAG="$7";
+DEV_TAG="$8";
 
 if [ "$#" -ne 7 ]; then
 	log "Illegal number of arguments.";
@@ -28,7 +29,7 @@ RELEASE_TAG=$(choose-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANC
 
 if [ "$RELEASE_TAG" = "$DEV_TAG" ]; then
 	if ! [ -z "$LATEST_VERSION" ]; then
-		REVISION_TYPE=$(get-revision-type $LATEST_VERSION) || exit $?;
+		REVISION_TYPE=$(get-revision-type $LATEST_VERSION $DEFAULT_TYPE) || exit $?;
 		RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION $REVISION_TYPE) || exit $?;
 	else
 		RAW_VERSION=$(calculate-revision -i $REVISION_PATTERN);
