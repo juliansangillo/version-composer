@@ -104,16 +104,20 @@ getRevisionType() {
 				break;
 			elif [ "$change" = "${TYPES[minor]}" ]; then
 				type='minor';
+				TYPES[minor]='';
 				TYPES[build]='';
 				TYPES[patch]='';
 			elif [ "$change" = "${TYPES[build]}" ]; then
 				type='build';
+				TYPES[build]='';
 				TYPES[patch]='';
 			elif [ "$change" = "${TYPES[patch]}" ]; then
 				type='patch';
 				TYPES[build]='';
+				TYPES[patch]='';
 			fi
 		fi
+		log "${TYPES[major]} ${TYPES[minor]} ${TYPES[build]} ${TYPES[patch]}";
 	done <<< "$history"
 	
 	log "Type: $type";
