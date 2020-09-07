@@ -28,7 +28,7 @@ RELEASE_TAG=$(choose-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANC
 
 if [ "$RELEASE_TAG" = "$DEV_TAG" ]; then
 	if ! [ -z "$LATEST_VERSION" ]; then
-		REVISION_TYPE=$(get-revision-type);
+		REVISION_TYPE=$(get-revision-type $LATEST_VERSION) || exit $?;
 		RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION $REVISION_TYPE) || exit $?;
 	else
 		RAW_VERSION=$(calculate-revision -i $REVISION_PATTERN);
@@ -39,8 +39,15 @@ fi
 
 VERSION=$(join . $RAW_VERSION $RELEASE_TAG);
 
+if [ "$RELEASE_TAG" = "$STABLE_TAG" ]; then
+	IS_PRERELEASE='false';
+else
+	IS_PRERELEASE='true';
+fi
+
 echo "::set-output name=version::$VERSION";
 echo "::set-output name=raw_version::$RAW_VERSION";
+echo "::set-output name=is_prerelease::$IS_PRERELEASE";
 
 log "Success";
 

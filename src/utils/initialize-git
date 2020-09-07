@@ -17,6 +17,9 @@ initializeGit() {
 	fi
 	
 	log "$version"
+	
+	git fetch;
+	log "Git initialized successfully!";
 }
 
 initializeGit;

@@ -34,6 +34,8 @@ outputs:
     description: The new version with the release tag appended at the end.
   raw-version:
     description: Version without the release tag at the end.
+  is-prerelease:
+    description: True if this version is an unstable release (dev or test branch) or false otherwise.
 runs:
   using: composite
   steps:

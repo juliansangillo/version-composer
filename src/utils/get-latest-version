@@ -2,12 +2,12 @@
 
 #get-latest-version
 #by Julian Sangillo <juliansangillo@gmail.com>
-#Gets the latest version from the latest tag that exists in the current git branch.
+#Gets the latest version from the latest tag that exists in repo.
 
 getLatestVersion() {
 	log "Getting the latest version from repo ...";
 	
-	local latest="$(git describe --abbrev=0 2>/dev/null | tr -d 'v')"
+	local latest="$(git describe --abbrev=0 --tags 2>/dev/null | tr -d 'v')"
 	if [ -z $latest ]; then
 		log "Latest version doesn't exist.";
 	else

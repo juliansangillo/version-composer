@@ -2,14 +2,32 @@
 
 #get-revision-type
 #by Julian Sangillo <juliansangillo@gmail.com>
-#Determine the revision type from the commit message. To specify a type, put [type] anywhere in the latest commit message, replacing 'type' with one of the valid options. If there is no revision type specified, then 'build' is the default.
+#Determine the revision type from the latest commit messages. If no revision type could be determined, then fallback on the default.
 #Revision Types:
 #		major
 #		minor
 #		build
 #		patch
 
-getCommitMessage() {
+LATEST_VERSION="$1";
+DEFAULT="$2";
+
+if [ "$#" -ne 2 ]; then
+	log "Could not calculate revision! Illegal number of arguments.";
+	exit 1
+fi
+
+if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+	log "Could not calculate revision! The latest version '$LATEST_VERSION' must be integers separated by periods.";
+	exit 16
+fi
+
+if [ "$DEFAULT" != "build" ] && [ "$DEFAULT" != "patch" ]; then
+	log "Could not calculate revision! The default must be either build or patch. Default='$DEFAULT'";
+	exit 32
+fi
+
+getCommitMessage-old() {
 	log "Getting commit message ...";
 
 	local max="$(($(git rev-list --full-history HEAD | wc -l)-1))";
@@ -27,7 +45,7 @@ getCommitMessage() {
 	echo $message
 }
 
-getRevisionTypeFromMessage() {
+getRevisionTypeFromMessage-old() {
 	local message="$1";
 	
 	log "Getting revision type from commit message ...";
@@ -44,12 +62,62 @@ getRevisionTypeFromMessage() {
 	fi
 }
 
-getRevisionType() {
+getRevisionType-old() {
 	local message="$(getCommitMessage)";
 	local type="$(getRevisionTypeFromMessage)";
 
 	log "Type: $type";
 	echo $type
+}
+
+getChangeType() {
+	local commit="$1";
+
+	local message="$(git show -s --format=%s $commit)";
+	local regex='^([a-zA-Z ]+)(\(.*\))?:.*$';
+
+	log "$commit = $message";
+	echo $message | grep -P "$regex" | sed -r "s/$regex/\1/g"
+}
+
+getRevisionType() {
+	log "Getting revision type ...";
+	log "(major, minor, build, patch)";
+	log "Default=$DEFAULT";
+	
+	local type="$DEFAULT";
+	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
+	
+	declare -A TYPES=( [major]='BREAKING CHANGE' [minor]=feat [build]=build [patch]=patch );
+	log "major=${TYPES[major]}";
+	log "minor=${TYPES[minor]}";
+	log "build=${TYPES[build]}";
+	log "patch=${TYPES[patch]}";
+	
+	log "Commits:"
+	while read -r commit; do
+		local change="$(getChangeType $commit)";
+		
+		if [ ! -z "$change" ] && [ "${TYPES[@]}" =~ *"$change"* ]; then
+			if [ "$change" = "${TYPES[major]}" ]; then
+				type='major';
+				break;
+			elif [ "$change" = "${TYPES[minor]}" ]; then
+				type='minor';
+				TYPES[build]='';
+				TYPES[patch]='';
+			elif [ "$change" = "${TYPES[build]}" ]; then
+				type='build';
+				TYPES[patch]='';
+			elif [ "$change" = "${TYPES[patch]}" ]; then
+				type='patch';
+				TYPES[build]='';
+			fi
+		fi
+	done <<< "$history"
+	
+	log "Type: $type";
+	echo "$type"
 }
 
 echo "$(getRevisionType)";
