@@ -27,49 +27,6 @@ if [ "$DEFAULT" != "build" ] && [ "$DEFAULT" != "patch" ]; then
 	exit 32
 fi
 
-getCommitMessage-old() {
-	log "Getting commit message ...";
-
-	local max="$(($(git rev-list --full-history HEAD | wc -l)-1))";
-	for ((i=0 ; i<=$max ; i++));
-	do
-		local message="$(git show -s --format=%s HEAD~$i)";
-		
-		if [[ "$message" != "Merge"* ]]; then
-			log "Found commit message.";
-			break;
-		fi
-	done
-	
-	log "Message = $message";
-	echo $message
-}
-
-getRevisionTypeFromMessage-old() {
-	local message="$1";
-	
-	log "Getting revision type from commit message ...";
-	log "(major, minor, build, patch)";
-
-	if [[ "${message,,}" == *"[major]"* ]]; then
-		echo "major"
-	elif [[ "${message,,}" == *"[minor]"* ]]; then
-		echo "minor"
-	elif [[ "${message,,}" == *"[patch]"* ]]; then
-		echo "patch"
-	else
-		echo "build"
-	fi
-}
-
-getRevisionType-old() {
-	local message="$(getCommitMessage)";
-	local type="$(getRevisionTypeFromMessage)";
-
-	log "Type: $type";
-	echo $type
-}
-
 getChangeType() {
 	local commit="$1";
 
@@ -88,7 +45,7 @@ getRevisionType() {
 	local type="$DEFAULT";
 	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
 	
-	declare -A TYPES=( [major]='BREAKING CHANGE' [minor]=feat [build]=build [patch]=patch );
+	declare -A TYPES=( [major]='BREAKING CHANGE' [minor]='feat perf' [build]='build' [patch]='patch' );
 	log "major=${TYPES[major]}";
 	log "minor=${TYPES[minor]}";
 	log "build=${TYPES[build]}";
@@ -99,19 +56,19 @@ getRevisionType() {
 		local change="$(getChangeType $commit)";
 		
 		if [ ! -z "$change" ] && [[ " ${TYPES[@]} " =~ " $change " ]]; then
-			if [ "$change" = "${TYPES[major]}" ]; then
+			if [[ " ${TYPES[major]} " =~ " $change " ]]; then
 				type='major';
 				break;
-			elif [ "$change" = "${TYPES[minor]}" ]; then
+			elif [[ " ${TYPES[minor]} " =~ " $change " ]]; then
 				type='minor';
 				TYPES[minor]='';
 				TYPES[build]='';
 				TYPES[patch]='';
-			elif [ "$change" = "${TYPES[build]}" ]; then
+			elif [[ " ${TYPES[build]} " =~ " $change " ]]; then
 				type='build';
 				TYPES[build]='';
 				TYPES[patch]='';
-			elif [ "$change" = "${TYPES[patch]}" ]; then
+			elif [ " ${TYPES[patch]} " =~ " $change " ]; then
 				type='patch';
 				TYPES[build]='';
 				TYPES[patch]='';

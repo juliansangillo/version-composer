@@ -6,6 +6,10 @@ inputs:
     description: Custom pattern showing version structure.
     required: false
     default: M.m.b
+  preferred-type:
+    description: The preferred revision type to fallback to if no other type can be determined. Possible values are 'build' or 'patch'
+    required: false
+    default: build
   stable-branch:
     description: Name of branch in your repo that will be used for stable releases.
     required: false
@@ -32,10 +36,13 @@ inputs:
 outputs:
   version:
     description: The new version with the release tag appended at the end.
+    value: ${{ steps.versioning.outputs.version }}
   raw-version:
     description: Version without the release tag at the end.
+    value: ${{ steps.versioning.outputs.raw_version }}
   is-prerelease:
     description: True if this version is an unstable release (dev or test branch) or false otherwise.
+    value: ${{ steps.versioning.outputs.is_prerelease }}
 runs:
   using: composite
   steps:
