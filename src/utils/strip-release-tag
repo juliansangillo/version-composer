@@ -1,0 +1,26 @@
+ #! /bin/bash
+
+#strip-release-tag
+#by Julian Sangillo
+#Returns the version without its release tag.
+
+VERSION="$1";
+
+if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
+		log "Could not calculate revision! The version '$VERSION' is invalid.";
+		exit 1
+	fi
+
+stripReleaseTag() {
+	local revisions=($(split . $VERSION));
+	local last=${#revisions[@]}-1
+	if ! [[ "${revisions[$last]}" =~ ^[0-9]+$ ]]; then
+		log "Stripping release tag";
+		revisions[$last]='';
+	fi
+	
+	echo "$(join . ${revisions[@]})";
+}
+
+echo "$(stripReleaseTag)";
+exit 0

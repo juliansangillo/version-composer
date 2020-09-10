@@ -12,20 +12,10 @@ getLatestVersion() {
 		log "Latest version doesn't exist.";
 	else
 		log "Latest version found. Revision: $latest";
-		
-		local revisions=($(split . $latest));
-		local last=${#revisions[@]}-1
-		if ! [[ "${revisions[$last]}" =~ ^[0-9]+$ ]]; then
-			log "Stripping release tag ...";
-			revisions[$last]='';
-		fi
-		
-		latest=$(join . ${revisions[@]});
-		log "Latest revision: $latest";
 	fi
 	
 	echo $latest
 }
 
 echo "$(getLatestVersion)";
-exit 0;
+exit 0
