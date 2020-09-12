@@ -28,7 +28,7 @@ LATEST_VERSION_TAGGED=$(get-latest-version);
 LATEST_VERSION_NOT_TAGGED=$(strip-release-tag $LATEST_VERSION_TAGGED);
 NEW_RELEASE_TAG=$(choose-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANCH -T $TEST_TAG -d $DEV_BRANCH -D $DEV_TAG) || exit $?;
 
-if [ "$RELEASE_TAG" = "$DEV_TAG" ]; then
+if [ "$NEW_RELEASE_TAG" = "$DEV_TAG" ]; then
 	if ! [ -z "$LATEST_VERSION" ]; then
 		REVISION_TYPE=$(get-revision-type $LATEST_VERSION_TAGGED $PREFERRED_TYPE) || exit $?;
 		RAW_VERSION=$(calculate-revision $REVISION_PATTERN $LATEST_VERSION_NOT_TAGGED $REVISION_TYPE) || exit $?;
@@ -41,7 +41,7 @@ fi
 
 VERSION=$(join . $RAW_VERSION $NEW_RELEASE_TAG);
 
-if [ "$RELEASE_TAG" = "$STABLE_TAG" ]; then
+if [ "$NEW_RELEASE_TAG" = "$STABLE_TAG" ]; then
 	IS_PRERELEASE='false';
 else
 	IS_PRERELEASE='true';
