@@ -17,7 +17,7 @@ if [ "$#" -ne 2 ]; then
 	exit 1
 fi
 
-if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
 	log "Could not calculate revision! The latest version '$LATEST_VERSION' must be integers separated by periods.";
 	exit 16
 fi
