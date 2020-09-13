@@ -45,6 +45,12 @@ getRevisionType() {
 	local type="$DEFAULT";
 	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
 	
+	if [ -z "$history" ]; then
+		log "No new history. Type: $DEFAULT";
+		echo "$DEFAULT";
+		return;
+	fi
+	
 	declare -A TYPES=( [major]='BREAKING CHANGE' [minor]='feat perf' [build]='build' [patch]='patch' );
 	log "major=${TYPES[major]}";
 	log "minor=${TYPES[minor]}";
