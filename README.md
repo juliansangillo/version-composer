@@ -174,4 +174,4 @@ jobs:
           prerelease: ${{ steps.composer.outputs.is-prerelease == 'true' }}
 ```
 ## See Also
-[juliansangillo/version-maestro](https://github.com/juliansangillo/version-maestro)
+[juliansangillo/version-maestro](https://github.com/marketplace/actions/version-maestro)
