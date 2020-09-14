@@ -1,6 +1,8 @@
 name: Version Composer
 author: Julian Sangillo
 description: Returns a new version identifier
+branding:
+  icon: tag
 inputs:
   revision-pattern:
     description: Custom pattern showing version structure.
