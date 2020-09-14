@@ -3,6 +3,7 @@ author: Julian Sangillo
 description: Returns a new version identifier
 branding:
   icon: tag
+  color: red
 inputs:
   revision-pattern:
     description: Custom pattern showing version structure.
