@@ -13,7 +13,7 @@ STABLE_TAG="$6";
 TEST_TAG="$7";
 DEV_TAG="$8";
 
-if [ "$#" -ne 7 ]; then
+if [ "$#" -ne 8 ]; then
 	log "Illegal number of arguments.";
 	exit 1
 fi
