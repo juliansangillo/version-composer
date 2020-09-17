@@ -26,7 +26,7 @@ initialize-git;
 
 LATEST_VERSION_TAGGED=$(get-latest-version);
 LATEST_VERSION_NOT_TAGGED=$(strip-release-tag $LATEST_VERSION_TAGGED);
-NEW_RELEASE_TAG=$(choose-release-tag -s $STABLE_BRANCH -S $STABLE_TAG -t $TEST_BRANCH -T $TEST_TAG -d $DEV_BRANCH -D $DEV_TAG) || exit $?;
+NEW_RELEASE_TAG=$(choose-release-tag -s "$STABLE_BRANCH" -S "$STABLE_TAG" -t "$TEST_BRANCH" -T "$TEST_TAG" -d "$DEV_BRANCH" -D "$DEV_TAG") || exit $?;
 
 if [ "$NEW_RELEASE_TAG" = "$DEV_TAG" ]; then
 	if ! [ -z "$LATEST_VERSION" ]; then
